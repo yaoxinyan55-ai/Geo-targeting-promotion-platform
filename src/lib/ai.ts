@@ -29,7 +29,7 @@ const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
   },
   qianwen: {
     apiUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-    model: "qwen-plus",
+    model: "qwen-turbo",
     envKey: "QIANWEN_API_KEY",
   },
 };

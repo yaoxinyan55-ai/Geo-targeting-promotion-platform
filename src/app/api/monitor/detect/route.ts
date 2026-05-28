@@ -73,12 +73,13 @@ export async function POST(request: NextRequest) {
           rank_position: analysis.rankPosition,
           snippet: analysis.snippet,
         });
-      } catch {
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : "未知错误";
         results.push({
           platform: p,
           is_cited: false,
           rank_position: null,
-          snippet: "检测失败",
+          snippet: `检测失败: ${errMsg.slice(0, 100)}`,
         });
       }
     }
