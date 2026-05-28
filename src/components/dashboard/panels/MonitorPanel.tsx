@@ -147,7 +147,7 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
         <div className="bg-primary-light rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-primary font-medium">
-              正在用 DeepSeek 检测... ({detectProgress.current}/{detectProgress.total})
+              正在检测... ({detectProgress.current}/{detectProgress.total})
             </span>
           </div>
           <div className="w-full bg-white rounded-full h-2">
@@ -223,6 +223,7 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
                   <th className="text-center px-4 py-3 text-xs font-medium text-muted uppercase">豆包</th>
                   <th className="text-center px-4 py-3 text-xs font-medium text-muted uppercase">DeepSeek</th>
                   <th className="text-center px-4 py-3 text-xs font-medium text-muted uppercase">Kimi</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-muted uppercase">千问</th>
                   <th className="text-center px-4 py-3 text-xs font-medium text-muted uppercase">最佳排名</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted uppercase">建议</th>
                 </tr>
@@ -238,7 +239,7 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
                   return (
                     <tr key={kw} className="border-b border-border last:border-0 hover:bg-secondary/50">
                       <td className="px-4 py-3 text-sm text-foreground max-w-[200px]">{kw}</td>
-                      {(["doubao", "deepseek", "kimi"] as const).map((platform: AIPlatform) => {
+                      {(["doubao", "deepseek", "kimi", "qianwen"] as const).map((platform: AIPlatform) => {
                         const record = kwRecords.find((r) => r.ai_platform === platform);
                         return (
                           <td key={platform} className="px-4 py-3 text-center">

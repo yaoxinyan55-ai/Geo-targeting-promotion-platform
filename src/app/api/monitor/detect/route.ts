@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { callDeepSeek } from "@/lib/ai";
+import { callAIPlatform, getConfiguredPlatforms } from "@/lib/ai";
+import type { AIPlatform } from "@/types/database";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +11,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "未登录" }, { status: 401 });
     }
 
-    const { projectId, keywordId } = await request.json();
+    const { projectId, keywordId, platform } = await request.json() as {
+      projectId: string;
+      keywordId: string;
+      platform?: AIPlatform;
+    };
+
     if (!projectId || !keywordId) {
       return NextResponse.json({ success: false, error: "缺少参数" }, { status: 400 });
     }
@@ -29,45 +35,87 @@ export async function POST(request: NextRequest) {
     const keyword = keywordRes.data;
     const targetName = project.target_name as string;
 
-    // 用DeepSeek搜索该关键词
-    const answer = await callDeepSeek([
-      {
-        role: "system",
-        content: "你是一个普通用户在使用AI搜索引擎。请根据用户的问题给出详细、客观的回答。回答中如果涉及品牌/产品推荐，请列出你认为值得推荐的，并简要说明理由。",
-      },
-      {
-        role: "user",
-        content: keyword.full_keyword as string,
-      },
-    ], 0.3);
+    // 确定要检测的平台
+    const configuredPlatforms = getConfiguredPlatforms();
+    const platformsToCheck: AIPlatform[] = platform
+      ? (configuredPlatforms.includes(platform) ? [platform] : [])
+      : configuredPlatforms;
 
-    // 分析回答
-    const analysis = analyzeResponse(answer, targetName);
+    if (platformsToCheck.length === 0) {
+      return NextResponse.json({ success: false, error: "没有可用的AI平台API" }, { status: 400 });
+    }
 
-    // 写入 monitor_records
+    const results: Array<{
+      platform: AIPlatform;
+      is_cited: boolean;
+      rank_position: number | null;
+      snippet: string;
+    }> = [];
+
+    // 逐个平台检测
+    for (const p of platformsToCheck) {
+      try {
+        const answer = await callAIPlatform(p, [
+          {
+            role: "system",
+            content: "你是一个普通用户在使用AI搜索引擎。请根据用户的问题给出详细、客观的回答。回答中如果涉及品牌/产品推荐，请列出你认为值得推荐的，并简要说明理由。",
+          },
+          {
+            role: "user",
+            content: keyword.full_keyword as string,
+          },
+        ], 0.3);
+
+        const analysis = analyzeResponse(answer, targetName);
+        results.push({
+          platform: p,
+          is_cited: analysis.isCited,
+          rank_position: analysis.rankPosition,
+          snippet: analysis.snippet,
+        });
+      } catch {
+        results.push({
+          platform: p,
+          is_cited: false,
+          rank_position: null,
+          snippet: "检测失败",
+        });
+      }
+    }
+
+    // 批量写入 monitor_records
     const now = new Date().toISOString();
+    const PLATFORM_SOURCE: Record<string, string> = {
+      deepseek: "DeepSeek直答",
+      doubao: "豆包直答",
+      kimi: "Kimi直答",
+      qianwen: "千问直答",
+    };
+
+    const records = results.map((r) => ({
+      project_id: projectId,
+      keyword_id: keywordId,
+      keyword_text: keyword.full_keyword,
+      ai_platform: r.platform,
+      detected_at: now,
+      is_cited: r.is_cited,
+      rank_position: r.rank_position,
+      citation_snippet: r.snippet,
+      citation_source: r.is_cited ? PLATFORM_SOURCE[r.platform] : "",
+      citation_ratio: null,
+      competitors_found: [],
+    }));
+
     const { error: insertError } = await supabase
       .from("monitor_records")
-      .insert({
-        project_id: projectId,
-        keyword_id: keywordId,
-        keyword_text: keyword.full_keyword,
-        ai_platform: "deepseek",
-        detected_at: now,
-        is_cited: analysis.isCited,
-        rank_position: analysis.rankPosition,
-        citation_snippet: analysis.snippet,
-        citation_source: analysis.isCited ? "DeepSeek直答" : "",
-        citation_ratio: null,
-        competitors_found: [],
-      });
+      .insert(records);
 
     if (insertError) {
       return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
     }
 
-    // 如果被引用，更新关键词状态
-    if (analysis.isCited) {
+    // 如果任一平台被引用，更新关键词状态
+    if (results.some((r) => r.is_cited)) {
       await supabase
         .from("keywords")
         .update({ status: "monitoring" })
@@ -77,10 +125,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        keyword_text: keyword.full_keyword,
-        is_cited: analysis.isCited,
-        rank_position: analysis.rankPosition,
-        snippet: analysis.snippet,
+        platforms_checked: platformsToCheck,
+        results,
       },
     });
   } catch (error) {

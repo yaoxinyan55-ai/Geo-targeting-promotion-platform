@@ -30,7 +30,7 @@ export interface PlatformPresence {
   enabled: boolean;
 }
 
-export type AIPlatform = "doubao" | "deepseek" | "kimi";
+export type AIPlatform = "doubao" | "deepseek" | "kimi" | "qianwen";
 
 export interface Keyword {
   id: string;
@@ -127,4 +127,5 @@ export const AI_PLATFORM_LABELS: Record<AIPlatform, string> = {
   doubao: "豆包",
   deepseek: "DeepSeek",
   kimi: "Kimi",
+  qianwen: "千问",
 };
