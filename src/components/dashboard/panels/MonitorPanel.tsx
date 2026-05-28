@@ -16,6 +16,7 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
   const [records, setRecords] = useState<MonitorRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detecting, setDetecting] = useState(false);
+  const [detectProgress, setDetectProgress] = useState({ current: 0, total: 0 });
   const [detectResult, setDetectResult] = useState<string | null>(null);
 
   const supabase = createClient();
@@ -68,30 +69,47 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
   const handleDetect = async () => {
     setDetecting(true);
     setDetectResult(null);
-    try {
-      const res = await fetch("/api/monitor/detect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: selectedProjectId }),
-      });
-      const json = await res.json() as { success: boolean; data?: { total: number; cited: number; rate: number }; error?: string };
-      if (json.success && json.data) {
-        setDetectResult(`检测完成！共检测 ${json.data.total} 个关键词，${json.data.cited} 个被引用，引用率 ${json.data.rate}%`);
-        // 重新加载数据
-        const [kwRes, mrRes] = await Promise.all([
-          supabase.from("keywords").select("*").eq("project_id", selectedProjectId).order("created_at", { ascending: false }),
-          supabase.from("monitor_records").select("*").eq("project_id", selectedProjectId).order("detected_at", { ascending: false }),
-        ]);
-        setKeywords((kwRes.data ?? []) as unknown as Keyword[]);
-        setRecords((mrRes.data ?? []) as unknown as MonitorRecord[]);
-      } else {
-        setDetectResult(`检测失败：${json.error || "未知错误"}`);
+    setDetectProgress({ current: 0, total: keywords.length });
+
+    let citedCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < keywords.length; i++) {
+      setDetectProgress({ current: i + 1, total: keywords.length });
+      try {
+        const res = await fetch("/api/monitor/detect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: selectedProjectId,
+            keywordId: keywords[i].id,
+          }),
+        });
+        const json = await res.json() as { success: boolean; data?: { is_cited: boolean }; error?: string };
+        if (json.success && json.data?.is_cited) {
+          citedCount++;
+        }
+        if (!json.success) {
+          failCount++;
+        }
+      } catch {
+        failCount++;
       }
-    } catch {
-      setDetectResult("检测失败：网络错误");
-    } finally {
-      setDetecting(false);
     }
+
+    const total = keywords.length;
+    const rate = total > 0 ? Math.round((citedCount / total) * 100) : 0;
+    const failText = failCount > 0 ? `，${failCount} 个检测失败` : "";
+    setDetectResult(`检测完成！共 ${total} 个关键词，${citedCount} 个被引用，引用率 ${rate}%${failText}`);
+
+    // 重新加载数据
+    const [kwRes, mrRes] = await Promise.all([
+      supabase.from("keywords").select("*").eq("project_id", selectedProjectId).order("created_at", { ascending: false }),
+      supabase.from("monitor_records").select("*").eq("project_id", selectedProjectId).order("detected_at", { ascending: false }),
+    ]);
+    setKeywords((kwRes.data ?? []) as unknown as Keyword[]);
+    setRecords((mrRes.data ?? []) as unknown as MonitorRecord[]);
+    setDetecting(false);
   };
 
   if (loading && projects.length === 0) {
@@ -126,8 +144,18 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
 
       {/* 检测进度/结果提示 */}
       {detecting && (
-        <div className="bg-primary-light rounded-xl p-4 text-sm text-primary animate-pulse">
-          正在用 DeepSeek 检测所有关键词，每个关键词需要几秒钟，请耐心等待...
+        <div className="bg-primary-light rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-primary font-medium">
+              正在用 DeepSeek 检测... ({detectProgress.current}/{detectProgress.total})
+            </span>
+          </div>
+          <div className="w-full bg-white rounded-full h-2">
+            <div
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${detectProgress.total > 0 ? (detectProgress.current / detectProgress.total) * 100 : 0}%` }}
+            />
+          </div>
         </div>
       )}
       {detectResult && !detecting && (
