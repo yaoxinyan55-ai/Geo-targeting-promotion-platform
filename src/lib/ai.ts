@@ -29,7 +29,7 @@ const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
   },
   qianwen: {
     apiUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-    model: "qwen-turbo",
+    model: "qwen-plus",
     envKey: "QIANWEN_API_KEY",
   },
 };
@@ -69,7 +69,7 @@ export async function callAIPlatform(
       model: config.model,
       messages,
       temperature,
-      max_tokens: 4096,
+      ...(platform !== "qianwen" ? { max_tokens: 4096 } : {}),
     }),
   });
 
