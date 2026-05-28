@@ -16,6 +16,7 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
   const [records, setRecords] = useState<MonitorRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detecting, setDetecting] = useState(false);
+  const [detectResult, setDetectResult] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -64,10 +65,33 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
 
   const latestRecord = records.length > 0 ? records[0] : null;
 
-  const handleDetect = () => {
+  const handleDetect = async () => {
     setDetecting(true);
-    // 暂未接入真实检测API，模拟检测过程
-    setTimeout(() => setDetecting(false), 3000);
+    setDetectResult(null);
+    try {
+      const res = await fetch("/api/monitor/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: selectedProjectId }),
+      });
+      const json = await res.json() as { success: boolean; data?: { total: number; cited: number; rate: number }; error?: string };
+      if (json.success && json.data) {
+        setDetectResult(`检测完成！共检测 ${json.data.total} 个关键词，${json.data.cited} 个被引用，引用率 ${json.data.rate}%`);
+        // 重新加载数据
+        const [kwRes, mrRes] = await Promise.all([
+          supabase.from("keywords").select("*").eq("project_id", selectedProjectId).order("created_at", { ascending: false }),
+          supabase.from("monitor_records").select("*").eq("project_id", selectedProjectId).order("detected_at", { ascending: false }),
+        ]);
+        setKeywords((kwRes.data ?? []) as unknown as Keyword[]);
+        setRecords((mrRes.data ?? []) as unknown as MonitorRecord[]);
+      } else {
+        setDetectResult(`检测失败：${json.error || "未知错误"}`);
+      }
+    } catch {
+      setDetectResult("检测失败：网络错误");
+    } finally {
+      setDetecting(false);
+    }
   };
 
   if (loading && projects.length === 0) {
@@ -99,6 +123,18 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
           {detecting ? "检测中..." : "一键检测全部"}
         </button>
       </div>
+
+      {/* 检测进度/结果提示 */}
+      {detecting && (
+        <div className="bg-primary-light rounded-xl p-4 text-sm text-primary animate-pulse">
+          正在用 DeepSeek 检测所有关键词，每个关键词需要几秒钟，请耐心等待...
+        </div>
+      )}
+      {detectResult && !detecting && (
+        <div className={`rounded-xl p-4 text-sm ${detectResult.includes("失败") ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
+          {detectResult}
+        </div>
+      )}
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
