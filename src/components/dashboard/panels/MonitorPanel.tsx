@@ -16,7 +16,10 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
   const [records, setRecords] = useState<MonitorRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detecting, setDetecting] = useState(false);
-  const [detectProgress, setDetectProgress] = useState({ current: 0, total: 0 });
+  const [detectProgress, setDetectProgress] = useState({ current: 0, total: 0, keywordName: "" });
+  const [platformStatus, setPlatformStatus] = useState<Record<AIPlatform, "waiting" | "checking" | "cited" | "not_cited" | "error">>({
+    doubao: "waiting", deepseek: "waiting", kimi: "waiting", qianwen: "waiting",
+  });
   const [detectResult, setDetectResult] = useState<string | null>(null);
 
   const supabase = createClient();
@@ -66,41 +69,82 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
 
   const latestRecord = records.length > 0 ? records[0] : null;
 
+  const PLATFORMS_TO_CHECK: AIPlatform[] = ["deepseek", "doubao", "kimi", "qianwen"];
+
   const handleDetect = async () => {
     setDetecting(true);
     setDetectResult(null);
-    setDetectProgress({ current: 0, total: keywords.length });
+    setDetectProgress({ current: 0, total: keywords.length, keywordName: "" });
 
-    let citedCount = 0;
-    let failCount = 0;
+    let totalCited = 0;
+    let totalFail = 0;
+    const platformStats: Record<AIPlatform, { cited: number; notCited: number; error: number }> = {
+      doubao: { cited: 0, notCited: 0, error: 0 },
+      deepseek: { cited: 0, notCited: 0, error: 0 },
+      kimi: { cited: 0, notCited: 0, error: 0 },
+      qianwen: { cited: 0, notCited: 0, error: 0 },
+    };
 
     for (let i = 0; i < keywords.length; i++) {
-      setDetectProgress({ current: i + 1, total: keywords.length });
-      try {
-        const res = await fetch("/api/monitor/detect", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            projectId: selectedProjectId,
-            keywordId: keywords[i].id,
-          }),
-        });
-        const json = await res.json() as { success: boolean; data?: { is_cited: boolean }; error?: string };
-        if (json.success && json.data?.is_cited) {
-          citedCount++;
+      const kw = keywords[i];
+      setDetectProgress({ current: i + 1, total: keywords.length, keywordName: kw.full_keyword });
+
+      // 重置所有平台状态为 waiting
+      setPlatformStatus({ doubao: "waiting", deepseek: "waiting", kimi: "waiting", qianwen: "waiting" });
+
+      let keywordCited = false;
+
+      // 逐个平台检测
+      for (const platform of PLATFORMS_TO_CHECK) {
+        setPlatformStatus((prev) => ({ ...prev, [platform]: "checking" }));
+
+        try {
+          const res = await fetch("/api/monitor/detect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              projectId: selectedProjectId,
+              keywordId: kw.id,
+              platform,
+            }),
+          });
+          const json = await res.json() as {
+            success: boolean;
+            data?: { results: Array<{ is_cited: boolean }> };
+            error?: string;
+          };
+
+          if (json.success && json.data?.results?.[0]) {
+            const cited = json.data.results[0].is_cited;
+            setPlatformStatus((prev) => ({ ...prev, [platform]: cited ? "cited" : "not_cited" }));
+            if (cited) {
+              platformStats[platform].cited++;
+              keywordCited = true;
+            } else {
+              platformStats[platform].notCited++;
+            }
+          } else {
+            setPlatformStatus((prev) => ({ ...prev, [platform]: "error" }));
+            platformStats[platform].error++;
+            totalFail++;
+          }
+        } catch {
+          setPlatformStatus((prev) => ({ ...prev, [platform]: "error" }));
+          platformStats[platform].error++;
+          totalFail++;
         }
-        if (!json.success) {
-          failCount++;
-        }
-      } catch {
-        failCount++;
       }
+
+      if (keywordCited) totalCited++;
     }
 
+    // 生成结果摘要
     const total = keywords.length;
-    const rate = total > 0 ? Math.round((citedCount / total) * 100) : 0;
-    const failText = failCount > 0 ? `，${failCount} 个检测失败` : "";
-    setDetectResult(`检测完成！共 ${total} 个关键词，${citedCount} 个被引用，引用率 ${rate}%${failText}`);
+    const rate = total > 0 ? Math.round((totalCited / total) * 100) : 0;
+    const platformSummary = PLATFORMS_TO_CHECK
+      .map((p) => `${AI_PLATFORM_LABELS[p]}引用${platformStats[p].cited}个${platformStats[p].error > 0 ? `(${platformStats[p].error}个失败)` : ""}`)
+      .join("，");
+    setDetectResult(`检测完成！共 ${total} 个关键词，${totalCited} 个被引用，引用率 ${rate}%。${platformSummary}`);
 
     // 重新加载数据
     const [kwRes, mrRes] = await Promise.all([
@@ -144,17 +188,37 @@ export function MonitorPanel({ onNavigate }: MonitorPanelProps) {
 
       {/* 检测进度/结果提示 */}
       {detecting && (
-        <div className="bg-primary-light rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
+        <div className="bg-primary-light rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
             <span className="text-sm text-primary font-medium">
-              正在检测... ({detectProgress.current}/{detectProgress.total})
+              正在检测关键词 ({detectProgress.current}/{detectProgress.total})
             </span>
           </div>
+          <p className="text-xs text-primary/70 truncate">当前：{detectProgress.keywordName}</p>
           <div className="w-full bg-white rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${detectProgress.total > 0 ? (detectProgress.current / detectProgress.total) * 100 : 0}%` }}
             />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {(["deepseek", "doubao", "kimi", "qianwen"] as AIPlatform[]).map((p) => {
+              const status = platformStatus[p];
+              const statusConfig = {
+                waiting: { text: "等待中", bg: "bg-white/60", textColor: "text-muted" },
+                checking: { text: "检测中...", bg: "bg-white", textColor: "text-primary animate-pulse" },
+                cited: { text: "已引用 ✓", bg: "bg-success/10", textColor: "text-success" },
+                not_cited: { text: "未引用", bg: "bg-danger/10", textColor: "text-danger" },
+                error: { text: "失败", bg: "bg-danger/10", textColor: "text-danger" },
+              };
+              const cfg = statusConfig[status];
+              return (
+                <div key={p} className={`${cfg.bg} rounded-lg px-3 py-2 text-center`}>
+                  <p className="text-xs text-muted mb-0.5">{AI_PLATFORM_LABELS[p]}</p>
+                  <p className={`text-xs font-medium ${cfg.textColor}`}>{cfg.text}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
