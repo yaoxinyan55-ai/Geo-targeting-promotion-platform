@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+86");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -15,13 +16,14 @@ export default function LoginPage() {
   const supabase = createClient();
 
   const handleSendCode = async () => {
-    if (!phone || phone.length !== 11) return;
+    const expectedLength = countryCode === "+86" ? 11 : 8;
+    if (!phone || phone.length !== expectedLength) return;
     setError("");
     setLoading(true);
 
     try {
       const { error: signInError } = await supabase.auth.signInWithOtp({
-        phone: `+86${phone}`,
+        phone: `${countryCode}${phone}`,
       });
 
       if (signInError) {
@@ -56,7 +58,7 @@ export default function LoginPage() {
 
     try {
       const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: `+86${phone}`,
+        phone: `${countryCode}${phone}`,
         token: code,
         type: "sms",
       });
@@ -109,15 +111,30 @@ export default function LoginPage() {
             >
               手机号
             </label>
-            <input
-              id="phone"
-              type="tel"
-              maxLength={11}
-              placeholder="请输入手机号"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-              className="w-full px-4 py-3 rounded-lg border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-            />
+            <div className="flex gap-2">
+              <select
+                value={countryCode}
+                onChange={(e) => {
+                  setCountryCode(e.target.value);
+                  setPhone("");
+                }}
+                className="px-3 py-3 rounded-lg border border-border text-foreground bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
+              >
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+853">🇲🇴 +853</option>
+                <option value="+852">🇭🇰 +852</option>
+                <option value="+1">🇺🇸 +1</option>
+              </select>
+              <input
+                id="phone"
+                type="tel"
+                maxLength={countryCode === "+86" ? 11 : 10}
+                placeholder="请输入手机号"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 px-4 py-3 rounded-lg border border-border text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              />
+            </div>
           </div>
 
           <div>
@@ -140,7 +157,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleSendCode}
-                disabled={countdown > 0 || phone.length !== 11 || loading}
+                disabled={countdown > 0 || phone.length < 7 || loading}
                 className="px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-primary-light text-primary hover:bg-primary/20"
               >
                 {countdown > 0 ? `${countdown}s` : codeSent ? "重新发送" : "获取验证码"}
