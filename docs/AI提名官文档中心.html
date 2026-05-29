@@ -558,7 +558,8 @@
         <tr><td>文章生成 Prompt 怎么写的?</td><td><span class="qlink" data-panel="doc3" data-section="pe-article">PE · 3</span></td><td>5 种类型 + 8 条写作约束 + JSON 输出</td></tr>
         <tr><td>怎么部署的?</td><td><span class="qlink" data-panel="doc1" data-section="deploy">项目讲解 · 7</span></td><td>Vercel 自动部署 + GitHub 推送触发</td></tr>
         <tr><td>Vibe Coding 怎么评价?</td><td><span class="qlink" data-panel="doc4" data-section="vc-what">复盘 · 1</span></td><td>PE + SDD + Harness 三维度评价框架</td></tr>
-        <tr><td>踩了什么坑?</td><td><span class="qlink" data-panel="doc4" data-section="vc-lessons">复盘 · 5</span></td><td>千问 max_tokens 兼容、Vercel 超时、缓存问题</td></tr>
+        <tr><td>踩了什么坑?</td><td><span class="qlink" data-panel="doc4" data-section="vc-lessons">复盘 · 5</span></td><td>千问 max_tokens 兼容、Vercel 超时、Twilio 地区适配</td></tr>
+        <tr><td>为什么定位港澳市场?</td><td><span class="qlink" data-panel="doc1" data-section="what">项目讲解 · 1</span></td><td>澳门硕士期间洞察:港澳商家需要触达大陆AI搜索用户</td></tr>
       </tbody>
     </table>
 
@@ -605,7 +606,7 @@
       <h2 id="dirs">4. 目录结构</h2>
       <pre>src/
   app/
-    (auth)/login/        # 手机验证码登录页
+    (auth)/login/        # 手机验证码登录页(港澳号码)
     (dashboard)/dashboard/  # 单页工作台(8 个面板)
     api/
       keywords/generate/  # 关键词生成 API
@@ -666,9 +667,10 @@
       <table>
         <thead><tr><th>阶段</th><th>完成内容</th></tr></thead>
         <tbody>
-          <tr><td>Day 1</td><td>项目初始化、官网落地页、Supabase 数据库建表、手机验证码登录</td></tr>
+          <tr><td>Day 1</td><td>项目初始化、官网落地页、Supabase 数据库建表、港澳手机号验证码登录</td></tr>
           <tr><td>Day 2</td><td>工作台 8 个面板、DeepSeek 关键词生成、文章生成、全量 mock 转真实数据</td></tr>
-          <tr><td>Day 3</td><td>监控检测 API、四平台接入、Vercel 部署上线、进度 UI 优化</td></tr>
+          <tr><td>Day 3</td><td>监控检测 API、四平台接入(豆包/DeepSeek/Kimi/千问)、Vercel 部署上线</td></tr>
+          <tr><td>Day 4</td><td>Twilio 短信对接、港澳市场定位调整、多区号支持(+853/+852)、文档中心</td></tr>
         </tbody>
       </table>
     </div>
@@ -781,7 +783,7 @@
         <li><strong>结构化输出</strong> — 所有 Prompt 都要求 AI 返回 JSON 格式,方便程序解析</li>
         <li><strong>角色设定明确</strong> — system prompt 锁定身份(GEO 专家 / 普通用户),防止角色漂移</li>
         <li><strong>约束条件前置</strong> — 不要什么(极限词、贬低竞品)写在要什么前面,优先级更高</li>
-        <li><strong>上下文注入</strong> — 把项目信息(品牌名、行业、卖点)作为变量注入,让输出和业务强关联</li>
+        <li><strong>上下文注入</strong> — 把港澳商家信息(品牌名、行业、卖点、所在地区)作为变量注入,让输出精准匹配大陆游客搜索场景</li>
       </ul>
 
       <h2 id="pe-keyword">2. 关键词生成 Prompt</h2>
@@ -802,11 +804,11 @@
       <table>
         <thead><tr><th>类型</th><th>场景</th><th>触发搜索词后缀</th></tr></thead>
         <tbody>
-          <tr><td>排行榜型</td><td>用户搜"XX排行榜"时被引用</td><td>排行榜、推荐、哪家好</td></tr>
-          <tr><td>年度盘点型</td><td>用户搜"2026年XX"时被引用</td><td>2026年、最新、盘点</td></tr>
-          <tr><td>选购指南型</td><td>用户搜"怎么选XX"时被引用</td><td>怎么选、如何挑、攻略</td></tr>
-          <tr><td>深度分析型</td><td>用户搜"XX深度分析"时被引用</td><td>分析、对比、测评</td></tr>
-          <tr><td>QA问答型</td><td>用户搜"XX怎么样"时被引用</td><td>怎么样、好不好、值得吗</td></tr>
+          <tr><td>排行榜型</td><td>游客搜"澳门葡国餐厅排行榜"时被引用</td><td>排行榜、推荐、哪家好</td></tr>
+          <tr><td>年度盘点型</td><td>游客搜"2026年香港必去景点"时被引用</td><td>2026年、最新、盘点</td></tr>
+          <tr><td>选购指南型</td><td>游客搜"澳门伴手礼怎么选"时被引用</td><td>怎么选、如何挑、攻略</td></tr>
+          <tr><td>深度分析型</td><td>游客搜"澳门酒店对比分析"时被引用</td><td>分析、对比、测评</td></tr>
+          <tr><td>QA问答型</td><td>游客搜"香港XX店怎么样"时被引用</td><td>怎么样、好不好、值得吗</td></tr>
         </tbody>
       </table>
       <p>8 条写作约束:</p>
@@ -822,7 +824,7 @@
       </ol>
 
       <h2 id="pe-monitor">4. 监控检测 Prompt</h2>
-      <p>检测 Prompt 的设计目标:模拟真实用户在 AI 搜索引擎里的提问行为,拿到 AI 的自然回答,再分析回答里有没有提到品牌。</p>
+      <p>检测 Prompt 的设计目标:模拟大陆游客在 AI 搜索引擎里搜索港澳消费推荐的真实行为,拿到 AI 的自然回答,再分析回答里有没有提到商家品牌。</p>
       <div class="info-box">
         <div class="info-title">System Prompt</div>
         <p style="margin:0">"你是一个普通用户在使用AI搜索引擎。请根据用户的问题给出详细、客观的回答。回答中如果涉及品牌/产品推荐,请列出你认为值得推荐的,并简要说明理由。"</p>
@@ -911,8 +913,8 @@
       <h3>Vercel 部署缓存</h3>
       <p>git push 后 Vercel 自动部署,但如果在部署过程中手动 Redeploy,会基于旧的 commit 重新构建,导致最新代码没上线。解决方案:空 commit 触发新的自动部署,或等 Redeploy 完成后再 push。</p>
 
-      <h3>Supabase Phone Auth 配置</h3>
-      <p>Twilio 试用账号无法向中国手机号发送验证码(需要升级为付费账号)。解决方案:在 Supabase 配置测试手机号和固定验证码,开发测试阶段不依赖真实短信。</p>
+      <h3>Twilio 短信地区适配</h3>
+      <p>Twilio 无法向中国大陆手机号(+86)发送短信(中国运营商拦截境外短信)。这反而验证了产品定位的正确性——目标市场就是港澳,港澳手机号(+853/+852)通过 Twilio 发送验证码完全正常。最终方案:登录页只保留港澳区号,Supabase Phone Auth + Twilio 对接港澳短信通道。</p>
     </div>
   </div>
 
