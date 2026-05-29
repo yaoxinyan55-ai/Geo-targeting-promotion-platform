@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI提名官 文档中心</title>
+<style>
+  :root {
+    --color-white:        #ffffff;
+    --color-gray-100:     #F8F8F8;
+    --color-gray-150:     #F0F0F0;
+    --color-gray-200:     #EEEEEE;
+    --color-gray-300:     #d1d5db;
+    --color-gray-450:     #767676;
+    --color-gray-500:     #999999;
+    --color-gray-600:     #666666;
+    --color-gray-700:     #171717;
+    --color-gray-900:     #1a1d2e;
+    --color-black-soft:   #191919;
+    --color-black-a4:     rgba(25, 25, 25, 0.04);
+    --color-black-a5:     rgba(25, 25, 25, 0.05);
+    --color-black-a8:     rgba(25, 25, 25, 0.08);
+    --color-green-600:    #16A34A;
+    --color-sky-500:      #0EA5E9;
+    --color-amber-500:    #D97706;
+    --color-purple-500:   #8B5CF6;
+
+    --bg: var(--color-white);
+    --lp-bg: var(--color-gray-100);
+    --strong: var(--color-black-soft);
+    --muted: var(--color-gray-600);
+    --subtle: var(--color-gray-450);
+    --decor: var(--color-gray-500);
+    --accent: var(--color-black-soft);
+    --border-subtle: var(--color-gray-200);
+    --border-div: var(--color-gray-150);
+    --border-strong: var(--color-gray-300);
+    --hover: var(--color-black-a4);
+
+    --font-app: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'SF Mono', 'JetBrains Mono', Monaco, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--font-app);
+    background: var(--bg);
+    color: var(--strong);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .layout { display: flex; width: 100vw; height: 100vh; }
+
+  /* ── Sidebar ── */
+  aside {
+    width: 280px; flex-shrink: 0;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--border-subtle);
+    padding: 24px 16px;
+    background: var(--bg);
+  }
+  aside .brand {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 22px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-div);
+  }
+  aside .brand .logo {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 13px;
+    flex-shrink: 0;
+  }
+  aside .brand .name { font-weight: 600; font-size: 15px; color: var(--strong); letter-spacing: -0.01em; }
+  aside .brand .sub { font-size: 11px; color: var(--subtle); }
+
+  .nav-tab {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; margin: 4px 0;
+    color: var(--strong);
+    font-weight: 600; font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    user-select: none;
+  }
+  .nav-tab:hover { background: var(--hover); }
+  .nav-tab.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .nav-tab .tab-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 5px;
+    font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .nav-tab.active .tab-num {
+    background: var(--bg);
+    color: var(--accent);
+  }
+  .nav-tab .tab-name { flex: 1; }
+  .nav-tab .chev {
+    color: var(--decor);
+    font-size: 10px;
+    margin-left: 4px;
+    transition: transform .2s;
+    display: inline-block;
+  }
+  .nav-group.expanded .nav-tab .chev { transform: rotate(90deg); }
+  .nav-tab.active .chev { color: var(--bg); }
+
+  .nav-subs {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .25s ease;
+  }
+  .nav-group.expanded .nav-subs { max-height: 600px; }
+  .nav-sub {
+    display: block;
+    padding: 5px 12px 5px 36px;
+    color: var(--muted);
+    font-size: 12.5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .nav-sub:hover { color: var(--strong); background: var(--hover); }
+  .nav-sub.active {
+    color: var(--strong);
+    background: var(--hover);
+    font-weight: 600;
+  }
+  .nav-group { margin-bottom: 4px; }
+  .nav-group.expanded { margin-bottom: 12px; }
+
+  /* ── Main ── */
+  main {
+    flex: 1; min-width: 0;
+    height: 100vh;
+    position: relative;
+    background: var(--bg);
+  }
+  .panel { display: none; height: 100%; overflow-y: auto; padding: 48px 56px 80px; }
+  .panel.active { display: block; }
+
+  /* ── overview ── */
+  .hero {
+    margin-bottom: 40px;
+    padding: 40px 36px;
+    background: var(--lp-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 22px;
+    max-width: 980px;
+  }
+  .hero .crumb { color: var(--decor); font-size: 12px; margin-bottom: 12px; letter-spacing: 0.05em; }
+  .hero h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; color: var(--strong); letter-spacing: -0.02em; }
+  .hero .tagline { font-size: 16px; color: var(--muted); max-width: 600px; margin-bottom: 22px; }
+  .hero .stat-row {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-div);
+  }
+  .hero .stat .num { font-size: 22px; font-weight: 700; color: var(--strong); letter-spacing: -0.02em; }
+  .hero .stat .label { font-size: 11px; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+  .section-head {
+    margin: 36px 0 16px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    max-width: 980px;
+  }
+  .section-head h2 { font-size: 20px; font-weight: 700; color: var(--strong); letter-spacing: -0.015em; }
+  .section-head .hint { font-size: 13px; color: var(--subtle); }
+
+  .docs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 980px;
+  }
+  .doc-card {
+    background: var(--bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 26px;
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  .doc-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .doc-card .doc-meta {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .doc-card .doc-tag {
+    font-size: 10.5px; font-weight: 600;
+    color: var(--decor);
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .doc-card .doc-accent {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .doc-card.sky .doc-accent { background: var(--color-sky-500); }
+  .doc-card.amber .doc-accent { background: var(--color-amber-500); }
+  .doc-card.purple .doc-accent { background: var(--color-purple-500); }
+  .doc-card h3 { font-size: 20px; font-weight: 700; color: var(--strong); letter-spacing: -0.015em; margin-bottom: 10px; }
+  .doc-card .desc { color: var(--muted); font-size: 14px; margin-bottom: 16px; line-height: 1.7; }
+  .doc-card .preview {
+    background: var(--lp-bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .doc-card .preview .preview-title {
+    font-size: 11px; font-weight: 600;
+    color: var(--decor);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .doc-card .preview ul { list-style: none; padding: 0; }
+  .doc-card .preview li { padding: 2px 0; }
+  .doc-card .preview li::before { content: "·"; color: var(--decor); margin-right: 8px; }
+  .doc-card .doc-stats {
+    display: flex; gap: 22px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-div);
+  }
+  .doc-card .doc-stats .stat-num { font-size: 15px; font-weight: 600; color: var(--strong); }
+  .doc-card .doc-stats .stat-label { font-size: 11px; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .quick-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    max-width: 980px;
+    background: var(--bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .quick-table th, .quick-table td {
+    text-align: left;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border-div);
+    font-size: 13.5px;
+  }
+  .quick-table th {
+    background: var(--lp-bg);
+    color: var(--decor);
+    font-weight: 600;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .quick-table tr:last-child td { border-bottom: none; }
+  .quick-table td .qlink {
+    color: var(--strong);
+    border-bottom: 1px dotted transparent;
+    cursor: pointer;
+  }
+  .quick-table td .qlink:hover { border-bottom-color: var(--decor); }
+
+  /* ── doc panel 内容样式 ── */
+  .doc-content { max-width: 780px; }
+  .doc-content h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+  .doc-content .doc-subtitle { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
+  .doc-content h2 {
+    font-size: 20px; font-weight: 700; margin: 36px 0 16px;
+    padding-top: 24px; border-top: 1px solid var(--border-div);
+    letter-spacing: -0.015em;
+  }
+  .doc-content h2:first-of-type { border-top: none; padding-top: 0; }
+  .doc-content h3 { font-size: 16px; font-weight: 600; margin: 20px 0 10px; }
+  .doc-content p { margin-bottom: 14px; color: var(--strong); font-size: 14.5px; }
+  .doc-content ul, .doc-content ol { margin: 8px 0 16px; padding-left: 20px; }
+  .doc-content li { margin-bottom: 6px; font-size: 14px; color: var(--strong); }
+  .doc-content code {
+    font-family: var(--font-mono);
+    background: var(--lp-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--strong);
+  }
+  .doc-content pre {
+    background: var(--color-gray-900);
+    color: #e5e7eb;
+    padding: 18px 22px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    font-family: var(--font-mono);
+  }
+  .doc-content .info-box {
+    background: var(--lp-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+  .doc-content .info-box .info-title {
+    font-weight: 600; font-size: 12px;
+    color: var(--decor);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .doc-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 13.5px;
+  }
+  .doc-content th, .doc-content td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-div);
+  }
+  .doc-content th {
+    background: var(--lp-bg);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--decor);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 1000px) {
+    aside { width: 220px; }
+    .docs-grid { grid-template-columns: 1fr; }
+    .panel { padding: 28px 24px; }
+    .hero h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside>
+  <div class="brand">
+    <div class="logo">AI</div>
+    <div>
+      <div class="name">AI提名官</div>
+      <div class="sub">文档中心</div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-group">
+      <div class="nav-tab active" data-panel="overview">
+        <span class="tab-num">*</span>
+        <span class="tab-name">总览</span>
+      </div>
+    </div>
+
+    <div class="nav-group" data-group="doc1">
+      <div class="nav-tab" data-panel="doc1">
+        <span class="tab-num">1</span>
+        <span class="tab-name">项目讲解</span>
+        <span class="chev">&#9656;</span>
+      </div>
+      <div class="nav-subs">
+        <a class="nav-sub" data-panel="doc1" data-section="what">1. 项目是什么</a>
+        <a class="nav-sub" data-panel="doc1" data-section="arch">2. 整体架构</a>
+        <a class="nav-sub" data-panel="doc1" data-section="workflow">3. 核心业务流</a>
+        <a class="nav-sub" data-panel="doc1" data-section="dirs">4. 目录结构</a>
+        <a class="nav-sub" data-panel="doc1" data-section="db">5. 数据库设计</a>
+        <a class="nav-sub" data-panel="doc1" data-section="ai">6. AI 接口层</a>
+        <a class="nav-sub" data-panel="doc1" data-section="deploy">7. 部署架构</a>
+        <a class="nav-sub" data-panel="doc1" data-section="timeline">8. 开发时间线</a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-group="doc2">
+      <div class="nav-tab" data-panel="doc2">
+        <span class="tab-num">2</span>
+        <span class="tab-name">工程规范</span>
+        <span class="chev">&#9656;</span>
+      </div>
+      <div class="nav-subs">
+        <a class="nav-sub" data-panel="doc2" data-section="sdd">1. SDD 规范驱动</a>
+        <a class="nav-sub" data-panel="doc2" data-section="claude-md">2. CLAUDE.md 约束</a>
+        <a class="nav-sub" data-panel="doc2" data-section="conventions">3. 编码规范</a>
+        <a class="nav-sub" data-panel="doc2" data-section="api-rules">4. API 接口规范</a>
+        <a class="nav-sub" data-panel="doc2" data-section="never">5. NEVER 清单</a>
+        <a class="nav-sub" data-panel="doc2" data-section="harness">6. Harness 质量体系</a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-group="doc3">
+      <div class="nav-tab" data-panel="doc3">
+        <span class="tab-num">3</span>
+        <span class="tab-name">Prompt Engineering</span>
+        <span class="chev">&#9656;</span>
+      </div>
+      <div class="nav-subs">
+        <a class="nav-sub" data-panel="doc3" data-section="pe-overview">1. PE 设计思路</a>
+        <a class="nav-sub" data-panel="doc3" data-section="pe-keyword">2. 关键词生成 Prompt</a>
+        <a class="nav-sub" data-panel="doc3" data-section="pe-article">3. 文章生成 Prompt</a>
+        <a class="nav-sub" data-panel="doc3" data-section="pe-monitor">4. 监控检测 Prompt</a>
+        <a class="nav-sub" data-panel="doc3" data-section="pe-constraints">5. 约束与防护</a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-group="doc4">
+      <div class="nav-tab" data-panel="doc4">
+        <span class="tab-num">4</span>
+        <span class="tab-name">Vibe Coding 复盘</span>
+        <span class="chev">&#9656;</span>
+      </div>
+      <div class="nav-subs">
+        <a class="nav-sub" data-panel="doc4" data-section="vc-what">1. 什么是 Vibe Coding</a>
+        <a class="nav-sub" data-panel="doc4" data-section="vc-pe">2. PE 维度自评</a>
+        <a class="nav-sub" data-panel="doc4" data-section="vc-sdd">3. SDD 维度自评</a>
+        <a class="nav-sub" data-panel="doc4" data-section="vc-harness">4. Harness 维度自评</a>
+        <a class="nav-sub" data-panel="doc4" data-section="vc-lessons">5. 踩坑与经验</a>
+      </div>
+    </div>
+  </nav>
+</aside>
+
+<main>
+
+  <!-- ============ 总览 panel ============ -->
+  <div class="panel active" data-panel="overview">
+
+    <div class="hero">
+      <div class="crumb">AI提名官 · 文档中心</div>
+      <h1>AI提名官 文档中心</h1>
+      <p class="tagline">项目讲解、工程规范、Prompt 设计、Vibe Coding 复盘 — 4 份核心文档统一入口,左侧切换板块,所有章节一键直达。</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num">4</div><div class="label">核心文档</div></div>
+        <div class="stat"><div class="num">25</div><div class="label">总章节数</div></div>
+        <div class="stat"><div class="num">60</div><div class="label">源码文件</div></div>
+        <div class="stat"><div class="num">v1.0</div><div class="label">版本</div></div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>核心文档</h2>
+      <span class="hint">点击卡片切换到对应板块</span>
+    </div>
+
+    <div class="docs-grid">
+
+      <div class="doc-card" data-panel="doc1">
+        <div class="doc-meta"><span class="doc-accent"></span><span class="doc-tag">DOC 01 · 工程</span></div>
+        <h3>项目讲解</h3>
+        <p class="desc">从港澳市场洞察到技术架构,把 AI提名官 的创业背景、业务逻辑、数据流、部署方式讲清楚,适合快速了解全貌。</p>
+        <div class="preview">
+          <div class="preview-title">核心章节</div>
+          <ul>
+            <li>GEO 全流程闭环:选词 - 写稿 - 分发 - 监控</li>
+            <li>6 张业务表 + RLS 行级安全隔离</li>
+            <li>4 家 AI 平台 OpenAI 兼容接口统一封装</li>
+            <li>Vercel + Supabase + GitHub 自动部署</li>
+          </ul>
+        </div>
+        <div class="doc-stats">
+          <div><div class="stat-num">8</div><div class="stat-label">章节</div></div>
+          <div><div class="stat-num">~15</div><div class="stat-label">分钟</div></div>
+        </div>
+      </div>
+
+      <div class="doc-card sky" data-panel="doc2">
+        <div class="doc-meta"><span class="doc-accent"></span><span class="doc-tag">DOC 02 · 规范</span></div>
+        <h3>工程规范</h3>
+        <p class="desc">SDD 规范驱动的开发方式 — CLAUDE.md 工程约束、编码规范、API 接口规则、Harness 质量验证体系。</p>
+        <div class="preview">
+          <div class="preview-title">核心内容</div>
+          <ul>
+            <li>CLAUDE.md 10 条 NEVER 约束清单</li>
+            <li>conventions.md 组件/样式/错误处理规范</li>
+            <li>API Routes 统一响应格式与鉴权规则</li>
+            <li>TypeScript 严格模式 + 零 any 策略</li>
+          </ul>
+        </div>
+        <div class="doc-stats">
+          <div><div class="stat-num">6</div><div class="stat-label">章节</div></div>
+          <div><div class="stat-num">~10</div><div class="stat-label">分钟</div></div>
+        </div>
+      </div>
+
+      <div class="doc-card amber" data-panel="doc3">
+        <div class="doc-meta"><span class="doc-accent"></span><span class="doc-tag">DOC 03 · PROMPT</span></div>
+        <h3>Prompt Engineering</h3>
+        <p class="desc">3 套核心 Prompt 的设计思路与完整文本 — 关键词生成、文章写作、多平台监控检测,含约束规则与防护机制。</p>
+        <div class="preview">
+          <div class="preview-title">核心 Prompt</div>
+          <ul>
+            <li>plant 公式关键词生成 Prompt</li>
+            <li>5 种文章类型生成 Prompt + 极限词过滤</li>
+            <li>四平台监控检测 Prompt + 品牌判定逻辑</li>
+            <li>结构化 JSON 输出约束</li>
+          </ul>
+        </div>
+        <div class="doc-stats">
+          <div><div class="stat-num">5</div><div class="stat-label">章节</div></div>
+          <div><div class="stat-num">~12</div><div class="stat-label">分钟</div></div>
+        </div>
+      </div>
+
+      <div class="doc-card purple" data-panel="doc4">
+        <div class="doc-meta"><span class="doc-accent"></span><span class="doc-tag">DOC 04 · 复盘</span></div>
+        <h3>Vibe Coding 复盘</h3>
+        <p class="desc">以 PE、SDD、Harness 三个维度复盘整个 Vibe Coding 过程,记录踩坑经验和关键决策点。</p>
+        <div class="preview">
+          <div class="preview-title">复盘维度</div>
+          <ul>
+            <li>PE:如何引导 AI 产出可控的业务代码</li>
+            <li>SDD:规范文档如何驱动开发质量</li>
+            <li>Harness:类型系统和三态覆盖如何兜底</li>
+            <li>踩坑记录:API 超时、平台兼容、部署缓存</li>
+          </ul>
+        </div>
+        <div class="doc-stats">
+          <div><div class="stat-num">5</div><div class="stat-label">章节</div></div>
+          <div><div class="stat-num">~10</div><div class="stat-label">分钟</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-head"><h2>高频跳转</h2><span class="hint">最常被问到的几个点</span></div>
+
+    <table class="quick-table">
+      <thead><tr><th style="width:32%">问题</th><th style="width:28%">直达章节</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>AI提名官是什么产品?</td><td><span class="qlink" data-panel="doc1" data-section="what">项目讲解 · 1</span></td><td>面向港澳商家的 GEO 平台,让大陆游客的 AI 搜索主动推荐你的品牌</td></tr>
+        <tr><td>GEO 和 SEO 有什么区别?</td><td><span class="qlink" data-panel="doc1" data-section="what">项目讲解 · 1</span></td><td>SEO 优化搜索排名,GEO 优化 AI 回答中的品牌引用</td></tr>
+        <tr><td>plant 公式是什么?</td><td><span class="qlink" data-panel="doc3" data-section="pe-keyword">PE · 2</span></td><td>前缀词 + 主词 + 后缀词 = 目标搜索词</td></tr>
+        <tr><td>接了哪些 AI 平台?</td><td><span class="qlink" data-panel="doc1" data-section="ai">项目讲解 · 6</span></td><td>DeepSeek + 豆包 + Kimi + 千问,统一 OpenAI 格式</td></tr>
+        <tr><td>数据库怎么设计的?</td><td><span class="qlink" data-panel="doc1" data-section="db">项目讲解 · 5</span></td><td>6 张表 + RLS 行级安全 + 自动 updated_at</td></tr>
+        <tr><td>NEVER 清单有哪些?</td><td><span class="qlink" data-panel="doc2" data-section="never">工程规范 · 5</span></td><td>10 条不可违反的工程红线</td></tr>
+        <tr><td>文章生成 Prompt 怎么写的?</td><td><span class="qlink" data-panel="doc3" data-section="pe-article">PE · 3</span></td><td>5 种类型 + 8 条写作约束 + JSON 输出</td></tr>
+        <tr><td>怎么部署的?</td><td><span class="qlink" data-panel="doc1" data-section="deploy">项目讲解 · 7</span></td><td>Vercel 自动部署 + GitHub 推送触发</td></tr>
+        <tr><td>Vibe Coding 怎么评价?</td><td><span class="qlink" data-panel="doc4" data-section="vc-what">复盘 · 1</span></td><td>PE + SDD + Harness 三维度评价框架</td></tr>
+        <tr><td>踩了什么坑?</td><td><span class="qlink" data-panel="doc4" data-section="vc-lessons">复盘 · 5</span></td><td>千问 max_tokens 兼容、Vercel 超时、缓存问题</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- ============ DOC 1: 项目讲解 ============ -->
+  <div class="panel" data-panel="doc1">
+    <div class="doc-content">
+      <h1>项目讲解</h1>
+      <p class="doc-subtitle">从澳门硕士期间的市场洞察,到面向港澳商家的 GEO 平台落地</p>
+
+      <h2 id="what">1. 项目是什么</h2>
+      <h3>创业背景</h3>
+      <p>创始人在澳门攻读硕士期间,观察到一个显著的市场机会:港澳地区大量商家(餐饮、零售、酒店、个人IP)的核心客源是大陆游客,而大陆游客正在快速从传统搜索引擎转向AI搜索(豆包、DeepSeek、Kimi、千问)获取消费推荐和旅行攻略。然而,港澳本地商家普遍缺乏针对大陆AI平台的内容优化能力,导致在AI推荐结果中严重缺位——大陆游客问"澳门必吃餐厅",AI 推荐的全是大众点评上的老店,本地新兴品牌完全没有存在感。</p>
+      <h3>产品定义</h3>
+      <p>AI提名官是一个面向港澳商家的 GEO(Generative Engine Optimization,生成式引擎优化)自动化平台。简单说,传统 SEO 是让你的网站在百度/Google 搜索结果里排名靠前;GEO 是让你的品牌在 AI 回答里被主动提到和推荐。</p>
+      <p>当大陆游客在豆包、DeepSeek、Kimi、千问里问"澳门性价比高的葡国餐厅"时,如果 AI 的回答里提到了你的餐厅,这就是 GEO 的效果。AI提名官做的事情就是帮港澳商家实现这个目标,覆盖从选词到监控的全流程。</p>
+      <h3>目标市场</h3>
+      <p>首发市场锁定澳門和香港。目标用户包括:港澳本地餐饮品牌、酒店民宿、零售商家、个人IP、旅游服务商。核心价值是让港澳商家出现在大陆游客的AI搜索推荐结果中,精准触达跨境消费客群。</p>
+
+      <h2 id="arch">2. 整体架构</h2>
+      <p>技术选型遵循"能用云服务就不自建"的原则,把精力集中在业务逻辑上:</p>
+      <table>
+        <thead><tr><th>层级</th><th>技术</th><th>选型理由</th></tr></thead>
+        <tbody>
+          <tr><td>前端框架</td><td>Next.js 15 App Router</td><td>SSR + API Routes 一体化,不用分前后端项目</td></tr>
+          <tr><td>样式</td><td>Tailwind CSS 4</td><td>utility-first,不写自定义 CSS,和设计 token 天然对齐</td></tr>
+          <tr><td>语言</td><td>TypeScript 严格模式</td><td>零 any,编译期拦截类型错误</td></tr>
+          <tr><td>数据库</td><td>Supabase (PostgreSQL)</td><td>自带 Auth + RLS + 实时订阅,免运维</td></tr>
+          <tr><td>AI 接口</td><td>DeepSeek + 豆包 + Kimi + 千问</td><td>四家全兼容 OpenAI 格式,统一封装</td></tr>
+          <tr><td>部署</td><td>Vercel</td><td>Git push 自动部署,免费额度够用</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="workflow">3. 核心业务流</h2>
+      <p>整个产品围绕四步闭环设计:</p>
+      <ol>
+        <li><strong>创建项目</strong> — 港澳商家填写品牌名、行业、核心卖点、竞品信息,一个项目对应一个 GEO 推广计划(如"澳门XX葡国餐厅")</li>
+        <li><strong>生成关键词</strong> — 调用 DeepSeek API,基于 plant 公式(前缀词+主词+后缀词)生成大陆游客可能搜索的目标词(如"澳门必吃葡国菜推荐"),按高中低优先级分层</li>
+        <li><strong>生成文章</strong> — 选关键词 + 选文章类型(排行榜/年度盘点/选购指南/深度分析/QA),AI 生成面向大陆内容平台的 GEO 优化文章</li>
+        <li><strong>监控检测</strong> — 对每个关键词,分别调用四家大陆AI平台的 API 提问,检查回答中是否推荐了该商家,记录引用排名和引用片段</li>
+      </ol>
+
+      <h2 id="dirs">4. 目录结构</h2>
+      <pre>src/
+  app/
+    (auth)/login/        # 手机验证码登录页
+    (dashboard)/dashboard/  # 单页工作台(8 个面板)
+    api/
+      keywords/generate/  # 关键词生成 API
+      articles/generate/  # 文章生成 API
+      monitor/detect/     # 监控检测 API
+  components/
+    marketing/           # 官网落地页组件(7 个)
+    dashboard/
+      panels/            # 8 个工作台面板
+      UnifiedSidebar.tsx  # 统一侧边栏
+  lib/
+    ai.ts               # 多平台 AI 调用封装
+    supabase/            # Supabase client/server/middleware
+  types/
+    database.ts          # 全量类型定义
+  constants/             # 常量集中管理</pre>
+
+      <h2 id="db">5. 数据库设计</h2>
+      <p>6 张业务表,全部启用 RLS 行级安全策略,用户只能看到自己的数据:</p>
+      <table>
+        <thead><tr><th>表名</th><th>用途</th><th>关键字段</th></tr></thead>
+        <tbody>
+          <tr><td>users</td><td>用户信息</td><td>phone, created_at</td></tr>
+          <tr><td>projects</td><td>推广项目</td><td>target_name, industry, core_selling_points</td></tr>
+          <tr><td>keywords</td><td>目标搜索词</td><td>prefix, main_word, suffix, full_keyword, priority</td></tr>
+          <tr><td>articles</td><td>生成的文章</td><td>title, content, article_type, status</td></tr>
+          <tr><td>platform_versions</td><td>平台适配版</td><td>platform, tags, published_url</td></tr>
+          <tr><td>monitor_records</td><td>检测记录</td><td>ai_platform, is_cited, rank_position, citation_snippet</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="ai">6. AI 接口层</h2>
+      <p>四家 AI 平台全部兼容 OpenAI 的 Chat Completions 格式,封装成统一的 <code>callAIPlatform()</code> 函数,新增平台只需要在配置表里加一行:</p>
+      <table>
+        <thead><tr><th>平台</th><th>API 地址</th><th>模型</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>DeepSeek</td><td>api.deepseek.com</td><td>deepseek-chat</td><td>写稿 + 选词 + 检测</td></tr>
+          <tr><td>豆包</td><td>ark.cn-beijing.volces.com</td><td>doubao-1-5-pro</td><td>检测</td></tr>
+          <tr><td>Kimi</td><td>api.moonshot.cn</td><td>moonshot-v1-8k</td><td>检测</td></tr>
+          <tr><td>千问</td><td>dashscope.aliyuncs.com</td><td>qwen-plus</td><td>检测</td></tr>
+        </tbody>
+      </table>
+      <div class="info-box">
+        <div class="info-title">兼容性处理</div>
+        <p style="margin:0">千问不接受 <code>max_tokens</code> 参数,发了会返回 400。代码里对千问做了特殊处理,跳过该参数。</p>
+      </div>
+
+      <h2 id="deploy">7. 部署架构</h2>
+      <p>三件套自动化部署:</p>
+      <ul>
+        <li><strong>GitHub</strong> — 代码仓库,每次 git push 自动触发 Vercel 构建</li>
+        <li><strong>Vercel</strong> — 前端 + API Routes 部署,免费 Hobby 计划,自带 CDN 和 HTTPS</li>
+        <li><strong>Supabase</strong> — 数据库 + 用户认证,云端托管,免运维</li>
+      </ul>
+      <p>环境变量通过 Vercel Dashboard 管理,共 6 个 key(Supabase URL/Key + 4 家 AI API Key),本地开发用 <code>.env.local</code> 文件,已加入 <code>.gitignore</code> 不会提交。</p>
+
+      <h2 id="timeline">8. 开发时间线</h2>
+      <table>
+        <thead><tr><th>阶段</th><th>完成内容</th></tr></thead>
+        <tbody>
+          <tr><td>Day 1</td><td>项目初始化、官网落地页、Supabase 数据库建表、手机验证码登录</td></tr>
+          <tr><td>Day 2</td><td>工作台 8 个面板、DeepSeek 关键词生成、文章生成、全量 mock 转真实数据</td></tr>
+          <tr><td>Day 3</td><td>监控检测 API、四平台接入、Vercel 部署上线、进度 UI 优化</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ DOC 2: 工程规范 ============ -->
+  <div class="panel" data-panel="doc2">
+    <div class="doc-content">
+      <h1>工程规范</h1>
+      <p class="doc-subtitle">SDD 规范驱动开发,用文档约束代码质量</p>
+
+      <h2 id="sdd">1. SDD 规范驱动</h2>
+      <p>SDD(Spec-Driven Development)的核心理念:先写规范文档,再写代码。在这个项目里,动手写第一行业务代码之前,先完成了三份规范文档:</p>
+      <ul>
+        <li><strong>CLAUDE.md</strong> — 工程总纲,定义技术栈、目录结构、命名规则、NEVER 红线</li>
+        <li><strong>conventions.md</strong> — 编码细则,约束组件设计、TypeScript 用法、样式规范、错误处理</li>
+        <li><strong>api-rules.md</strong> — API 接口规则,统一响应格式、鉴权方式、参数校验</li>
+      </ul>
+      <p>这三份文档在整个开发过程中持续生效,所有代码变更都要符合文档里的约束条件,不符合的不允许合入。</p>
+
+      <h2 id="claude-md">2. CLAUDE.md 约束</h2>
+      <p>CLAUDE.md 是整个项目的工程宪法,包含以下板块:</p>
+      <ul>
+        <li>技术栈锁定 — Next.js 15 + Tailwind CSS 4 + TypeScript + Supabase</li>
+        <li>目录结构规范 — 每个目录的职责边界</li>
+        <li>命名规范 — 组件 PascalCase,工具 camelCase</li>
+        <li>导出规范 — 全部 named export,page.tsx 除外</li>
+        <li>业务术语表 — plant 公式、目标搜索词、主稿、平台版本等</li>
+        <li>Git 规范 — feat/fix/refactor 前缀,中文描述</li>
+        <li>NEVER 清单 — 10 条不可违反的红线</li>
+        <li>压缩指令 — 上下文压缩时必须保留的信息</li>
+      </ul>
+
+      <h2 id="conventions">3. 编码规范</h2>
+      <p>conventions.md 约束具体的编码行为:</p>
+      <h3>组件设计</h3>
+      <ul>
+        <li>Mobile First,从移动端写起用 <code>md:</code> <code>lg:</code> 扩展</li>
+        <li>一个组件只做一件事,超过 150 行考虑拆分</li>
+        <li>所有交互元素必须有 hover / active / focus 视觉反馈</li>
+      </ul>
+      <h3>TypeScript</h3>
+      <ul>
+        <li>接口用 <code>interface</code>,联合类型用 <code>type</code></li>
+        <li>API 响应必须定义完整类型,不允许 <code>as any</code></li>
+      </ul>
+      <h3>错误处理</h3>
+      <ul>
+        <li>API 调用必须处理 loading / success / error 三态</li>
+        <li>用户操作失败给中文提示,不暴露技术细节</li>
+        <li>表单提交防重复点击,提交中禁用按钮</li>
+      </ul>
+
+      <h2 id="api-rules">4. API 接口规范</h2>
+      <p>所有 API Route 遵循统一规则:</p>
+      <ul>
+        <li>必须验证用户身份(检查 Supabase session)</li>
+        <li>请求参数做类型校验</li>
+        <li>返回统一格式:<code>{ success: boolean, data?: T, error?: string }</code></li>
+        <li>敏感操作必须检查资源所有权</li>
+        <li>不在响应中暴露内部错误堆栈</li>
+      </ul>
+
+      <h2 id="never">5. NEVER 清单</h2>
+      <p>10 条工程红线,任何情况下都不允许违反:</p>
+      <ol>
+        <li>不使用 <code>any</code> 类型,必须定义明确的类型</li>
+        <li>不在组件中直接调用 API,必须通过 hooks 或 lib 层</li>
+        <li>不硬编码颜色/字号/间距,必须使用 Tailwind design token</li>
+        <li>不提交 .env 文件或任何包含密钥的文件</li>
+        <li>不使用 git push --force</li>
+        <li>不删除非自己创建的文件,除非明确要求</li>
+        <li>不一次性重构超过 3 个文件,大重构必须分步</li>
+        <li>不在前端暴露 Supabase service_role key,只用 anon key</li>
+        <li>不跳过手机验证码校验逻辑</li>
+        <li>不在文章生成中使用极限词(最、第一、100%、顶级)</li>
+      </ol>
+
+      <h2 id="harness">6. Harness 质量体系</h2>
+      <p>Harness 是保障代码质量的验证体系,在这个项目里体现在三个层面:</p>
+      <h3>编译期验证</h3>
+      <ul>
+        <li>TypeScript 严格模式,每次变更前 <code>npx tsc --noEmit</code> 零错误才允许提交</li>
+        <li>全量代码零 any,类型系统覆盖所有数据结构</li>
+      </ul>
+      <h3>运行时防护</h3>
+      <ul>
+        <li>API 层统一错误捕获,try-catch 包裹所有外部调用</li>
+        <li>前端三态覆盖(loading/success/error/empty),用户永远能看到明确的状态</li>
+        <li>AI API 调用的超时和错误隔离,单个平台失败不影响其他</li>
+      </ul>
+      <h3>安全边界</h3>
+      <ul>
+        <li>RLS 行级安全策略,数据库层面隔离用户数据</li>
+        <li>API Route 强制鉴权,未登录直接返回 401</li>
+        <li>.env.local + .gitignore 保护密钥不泄露</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ DOC 3: Prompt Engineering ============ -->
+  <div class="panel" data-panel="doc3">
+    <div class="doc-content">
+      <h1>Prompt Engineering</h1>
+      <p class="doc-subtitle">3 套核心 Prompt 的设计思路与约束规则</p>
+
+      <h2 id="pe-overview">1. PE 设计思路</h2>
+      <p>这个项目有 3 个需要 Prompt 的场景,设计原则一致:</p>
+      <ul>
+        <li><strong>结构化输出</strong> — 所有 Prompt 都要求 AI 返回 JSON 格式,方便程序解析</li>
+        <li><strong>角色设定明确</strong> — system prompt 锁定身份(GEO 专家 / 普通用户),防止角色漂移</li>
+        <li><strong>约束条件前置</strong> — 不要什么(极限词、贬低竞品)写在要什么前面,优先级更高</li>
+        <li><strong>上下文注入</strong> — 把项目信息(品牌名、行业、卖点)作为变量注入,让输出和业务强关联</li>
+      </ul>
+
+      <h2 id="pe-keyword">2. 关键词生成 Prompt</h2>
+      <p>基于 plant 公式(前缀词 + 主词 + 后缀词 = 目标搜索词)生成关键词矩阵。</p>
+      <div class="info-box">
+        <div class="info-title">设计要点</div>
+        <ul style="margin:0;padding-left:18px;">
+          <li>一次生成 12 组,按 3 档优先级分层(高 4 + 中 4 + 低 4)</li>
+          <li>注入项目的 target_name、industry、competitors 作为上下文</li>
+          <li>要求主词从核心品类逐步外扩到细分赛道</li>
+          <li>后缀词决定 AI 回答形式:推荐/排行榜/怎么选/测评</li>
+          <li>输出格式:JSON 数组,每个元素含 prefix/main_word/suffix/full_keyword/priority</li>
+        </ul>
+      </div>
+
+      <h2 id="pe-article">3. 文章生成 Prompt</h2>
+      <p>支持 5 种文章类型,每种对应不同的 AI 回答场景:</p>
+      <table>
+        <thead><tr><th>类型</th><th>场景</th><th>触发搜索词后缀</th></tr></thead>
+        <tbody>
+          <tr><td>排行榜型</td><td>用户搜"XX排行榜"时被引用</td><td>排行榜、推荐、哪家好</td></tr>
+          <tr><td>年度盘点型</td><td>用户搜"2026年XX"时被引用</td><td>2026年、最新、盘点</td></tr>
+          <tr><td>选购指南型</td><td>用户搜"怎么选XX"时被引用</td><td>怎么选、如何挑、攻略</td></tr>
+          <tr><td>深度分析型</td><td>用户搜"XX深度分析"时被引用</td><td>分析、对比、测评</td></tr>
+          <tr><td>QA问答型</td><td>用户搜"XX怎么样"时被引用</td><td>怎么样、好不好、值得吗</td></tr>
+        </tbody>
+      </table>
+      <p>8 条写作约束:</p>
+      <ol>
+        <li>标题必须包含目标关键词</li>
+        <li>文章 1500-2500 字,结构清晰有小标题</li>
+        <li>必须包含具体数据(数字、百分比、年份)</li>
+        <li>品牌名自然出现 2-3 次,不堆砌</li>
+        <li>禁止极限词("最好""第一""100%")</li>
+        <li>提到竞品时客观对比,不贬低</li>
+        <li>文章要有权威感,像行业专家写的</li>
+        <li>包含可被 AI 引用的结论性语句</li>
+      </ol>
+
+      <h2 id="pe-monitor">4. 监控检测 Prompt</h2>
+      <p>检测 Prompt 的设计目标:模拟真实用户在 AI 搜索引擎里的提问行为,拿到 AI 的自然回答,再分析回答里有没有提到品牌。</p>
+      <div class="info-box">
+        <div class="info-title">System Prompt</div>
+        <p style="margin:0">"你是一个普通用户在使用AI搜索引擎。请根据用户的问题给出详细、客观的回答。回答中如果涉及品牌/产品推荐,请列出你认为值得推荐的,并简要说明理由。"</p>
+      </div>
+      <p>回答分析逻辑(代码实现,非 Prompt):</p>
+      <ul>
+        <li><strong>品牌判定</strong> — 检查回答文本中是否包含 target_name(不区分大小写)</li>
+        <li><strong>排名估算</strong> — 如果回答是编号列表,找品牌在第几条;否则按段落位置估算</li>
+        <li><strong>片段提取</strong> — 截取品牌名前后各 50-100 字作为引用片段</li>
+      </ul>
+
+      <h2 id="pe-constraints">5. 约束与防护</h2>
+      <p>Prompt 层面的安全约束:</p>
+      <ul>
+        <li>system prompt 用"只返回 JSON 对象,不要返回其他内容"锁定输出格式,防止 AI 加额外解释</li>
+        <li>temperature 设置:写稿用 0.7(保持创意),检测用 0.3(追求稳定)</li>
+        <li>极限词过滤写在 Prompt 约束里,从生成源头拦截</li>
+        <li>代码层面用 <code>result.match(/\{[\s\S]*\}/)</code> 提取 JSON,容错 AI 返回多余文本</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ DOC 4: Vibe Coding 复盘 ============ -->
+  <div class="panel" data-panel="doc4">
+    <div class="doc-content">
+      <h1>Vibe Coding 复盘</h1>
+      <p class="doc-subtitle">以 PE / SDD / Harness 三维度复盘 Vibe Coding 全过程</p>
+
+      <h2 id="vc-what">1. 什么是 Vibe Coding</h2>
+      <p>Vibe Coding 是指通过自然语言指导 AI 编程助手完成产品开发的工作方式。开发者的核心职责从"写代码"转变为"定义需求、设计架构、约束质量"。</p>
+      <p>评价一个 Vibe Coding 项目的质量,主要看三个维度:</p>
+      <ul>
+        <li><strong>PE(Prompt Engineering)</strong> — 你给 AI 的指令质量如何,能不能让 AI 产出可控、稳定的结果</li>
+        <li><strong>SDD(Spec-Driven Development)</strong> — 你有没有在写代码前定义好规范,用文档驱动开发</li>
+        <li><strong>Harness</strong> — 你有没有搭建验证体系,在 AI 产出代码后能自动检查质量</li>
+      </ul>
+
+      <h2 id="vc-pe">2. PE 维度自评</h2>
+      <h3>做得好的</h3>
+      <ul>
+        <li>CLAUDE.md 作为全局 system prompt,给 AI 助手定义了完整的项目上下文、约束条件和术语表</li>
+        <li>业务 Prompt(关键词/文章/检测)都做了结构化输出约束,JSON 格式统一且稳定</li>
+        <li>用 NEVER 清单明确禁区,防止 AI 越界(比如用极限词、暴露 service_role key)</li>
+      </ul>
+      <h3>可以改进的</h3>
+      <ul>
+        <li>关键词生成 Prompt 缺少 few-shot 示例,AI 有时候对 plant 公式理解不够精准</li>
+        <li>没有做 Prompt 版本管理,迭代过程中的中间版本没有保留</li>
+      </ul>
+
+      <h2 id="vc-sdd">3. SDD 维度自评</h2>
+      <h3>做得好的</h3>
+      <ul>
+        <li>动手写代码前先完成了三份规范文档(CLAUDE.md / conventions.md / api-rules.md),开发全程有据可依</li>
+        <li>数据库 6 张表的字段、类型、关联关系在建表 SQL 里一次性定义清楚,后续没有反复改表</li>
+        <li>types/database.ts 集中定义所有类型,前后端共享,改一处全局生效</li>
+      </ul>
+      <h3>可以改进的</h3>
+      <ul>
+        <li>缺少 PRD 或用户故事文档,需求是口头沟通后直接开发,没有书面留痕</li>
+        <li>API 接口没有写 OpenAPI/Swagger 文档,接口契约只存在于代码里</li>
+      </ul>
+
+      <h2 id="vc-harness">4. Harness 维度自评</h2>
+      <h3>做得好的</h3>
+      <ul>
+        <li>TypeScript 严格模式 + 零 any,每次提交前跑 tsc --noEmit,编译不过不提交</li>
+        <li>API 层统一 try-catch + 统一响应格式,任何一个外部调用失败都有兜底</li>
+        <li>前端所有面板覆盖 loading / success / error / empty 四态,用户不会看到白屏或卡死</li>
+        <li>监控检测做了错误隔离 — 一个平台超时不影响其他三个平台的结果</li>
+      </ul>
+      <h3>可以改进的</h3>
+      <ul>
+        <li>没有写单元测试和集成测试,质量验证完全靠类型系统和手动测试</li>
+        <li>没有接入 CI/CD 流水线的自动化检查,lint 和 type check 靠手动执行</li>
+        <li>缺少端到端测试,关键业务流没有自动化回归保障</li>
+      </ul>
+
+      <h2 id="vc-lessons">5. 踩坑与经验</h2>
+      <h3>千问 API 兼容性</h3>
+      <p>千问的 OpenAI 兼容模式不接受 <code>max_tokens</code> 参数,发了直接返回 400。其他三家都正常。解决方案:对千问跳过该参数。教训:号称"兼容"不等于"完全一致",每家都要实际测一遍。</p>
+
+      <h3>Vercel Serverless 超时</h3>
+      <p>Hobby 计划函数超时 10 秒。最初把 12 个关键词 x 4 个平台的检测放在一个 API 调用里,48 次 AI 调用总耗时远超 10 秒。解决方案:前端逐个关键词、逐个平台发起请求,每次请求只调一家 API,控制在 10 秒内。</p>
+
+      <h3>Vercel 部署缓存</h3>
+      <p>git push 后 Vercel 自动部署,但如果在部署过程中手动 Redeploy,会基于旧的 commit 重新构建,导致最新代码没上线。解决方案:空 commit 触发新的自动部署,或等 Redeploy 完成后再 push。</p>
+
+      <h3>Supabase Phone Auth 配置</h3>
+      <p>Twilio 试用账号无法向中国手机号发送验证码(需要升级为付费账号)。解决方案:在 Supabase 配置测试手机号和固定验证码,开发测试阶段不依赖真实短信。</p>
+    </div>
+  </div>
+
+</main>
+
+</div>
+
+<script>
+(function() {
+  const panels = document.querySelectorAll('.panel');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const groups = document.querySelectorAll('.nav-group[data-group]');
+  const allTriggers = document.querySelectorAll('[data-panel]');
+
+  function showPanel(panelName, sectionId) {
+    panels.forEach(p => p.classList.remove('active'));
+    const panel = document.querySelector('.panel[data-panel="' + panelName + '"]');
+    if (!panel) return;
+    panel.classList.add('active');
+
+    tabs.forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector('.nav-tab[data-panel="' + panelName + '"]');
+    if (tab) tab.classList.add('active');
+
+    groups.forEach(g => g.classList.remove('expanded'));
+    const targetGroup = document.querySelector('.nav-group[data-group="' + panelName + '"]');
+    if (targetGroup) targetGroup.classList.add('expanded');
+
+    if (sectionId) {
+      var el = document.getElementById(sectionId);
+      if (el) {
+        setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+      }
+    } else {
+      panel.scrollTop = 0;
+    }
+
+    if (panelName !== 'overview') {
+      history.replaceState(null, '', '#' + panelName);
+    } else {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  allTriggers.forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      var panelName = el.getAttribute('data-panel');
+      var sectionId = el.getAttribute('data-section');
+      if (!panelName) return;
+      e.preventDefault();
+      showPanel(panelName, sectionId);
+    });
+  });
+
+  // highlight nav-sub on click
+  document.querySelectorAll('.nav-sub').forEach(function(sub) {
+    sub.addEventListener('click', function() {
+      document.querySelectorAll('.nav-sub').forEach(function(s) { s.classList.remove('active'); });
+      sub.classList.add('active');
+    });
+  });
+
+  var initialHash = window.location.hash.replace('#', '');
+  if (initialHash && document.querySelector('.panel[data-panel="' + initialHash + '"]')) {
+    showPanel(initialHash);
+  } else {
+    showPanel('overview');
+  }
+})();
+</script>
+</body>
+</html>

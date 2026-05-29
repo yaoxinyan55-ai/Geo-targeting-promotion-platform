@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+86");
+  const [countryCode, setCountryCode] = useState("+853");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -16,7 +16,7 @@ export default function LoginPage() {
   const supabase = createClient();
 
   const handleSendCode = async () => {
-    const expectedLength = countryCode === "+86" ? 11 : 8;
+    const expectedLength = 8;
     if (!phone || phone.length !== expectedLength) return;
     setError("");
     setLoading(true);
@@ -120,15 +120,13 @@ export default function LoginPage() {
                 }}
                 className="px-3 py-3 rounded-lg border border-border text-foreground bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
               >
-                <option value="+86">🇨🇳 +86</option>
-                <option value="+853">🇲🇴 +853</option>
-                <option value="+852">🇭🇰 +852</option>
-                <option value="+1">🇺🇸 +1</option>
+                <option value="+853">🇲🇴 +853 澳門</option>
+                <option value="+852">🇭🇰 +852 香港</option>
               </select>
               <input
                 id="phone"
                 type="tel"
-                maxLength={countryCode === "+86" ? 11 : 10}
+                maxLength={8}
                 placeholder="请输入手机号"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
