@@ -60,13 +60,63 @@ export const ARTICLE_TYPE_LABELS: Record<ArticleType, string> = {
   qa: "QA问答型",
 };
 
-export type PublishPlatform = "toutiao" | "sohu" | "zhihu" | "csdn";
+export type PublishPlatform =
+  | "wangyi"
+  | "sohu"
+  | "baijiahao"
+  | "toutiao"
+  | "qiehao"
+  | "zhihu"
+  | "gongzhonghao"
+  | "xiaohongshu"
+  | "douyin"
+  | "bilibili"
+  | "csdn"
+  | "jianshu";
 
 export const PUBLISH_PLATFORM_LABELS: Record<PublishPlatform, string> = {
-  toutiao: "今日头条",
+  wangyi: "网易",
   sohu: "搜狐",
+  baijiahao: "百家号",
+  toutiao: "头条号",
+  qiehao: "企鹅号",
   zhihu: "知乎",
+  gongzhonghao: "公众号",
+  xiaohongshu: "小红书",
+  douyin: "抖音",
+  bilibili: "B站",
   csdn: "CSDN",
+  jianshu: "简书",
+};
+
+export const PUBLISH_PLATFORM_URLS: Record<PublishPlatform, string> = {
+  wangyi: "https://mp.163.com/login.html",
+  sohu: "https://mp.sohu.com/mpfe/v3/main/new-batch.action",
+  baijiahao: "https://baijiahao.baidu.com/builder/rc/edit",
+  toutiao: "https://mp.toutiao.com/profile_v4/graphic/publish",
+  qiehao: "https://om.qq.com/article/articlePublish",
+  zhihu: "https://zhuanlan.zhihu.com/write",
+  gongzhonghao: "https://mp.weixin.qq.com/",
+  xiaohongshu: "https://creator.xiaohongshu.com/publish/publish",
+  douyin: "https://creator.douyin.com/creator-micro/content/upload",
+  bilibili: "https://member.bilibili.com/platform/upload/text/edit",
+  csdn: "https://editor.csdn.net/md",
+  jianshu: "https://www.jianshu.com/writer",
+};
+
+export const PLATFORM_TONE_DESC: Record<PublishPlatform, string> = {
+  wangyi: "严肃专业、新闻感强、注重数据引用",
+  sohu: "信息密集、客观报道风格、标题吸引力强",
+  baijiahao: "通俗易懂、故事化叙述、适合SEO优化",
+  toutiao: "标题党风格、口语化、短段落、强节奏感",
+  qiehao: "轻松幽默、年轻化表达、互动性强",
+  zhihu: "专业深度、逻辑严密、引用数据和来源",
+  gongzhonghao: "温暖走心、品牌调性强、排版精美",
+  xiaohongshu: "种草风、口语化、emoji丰富、分点罗列",
+  douyin: "短平快、口语极强、话题感、引发讨论",
+  bilibili: "年轻化、梗多、UP主人设感、真诚分享",
+  csdn: "技术向、代码示例、结构化、干货密集",
+  jianshu: "文艺清新、个人体验感、散文化叙事",
 };
 
 export interface Article {
