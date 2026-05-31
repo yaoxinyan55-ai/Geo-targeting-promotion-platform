@@ -379,12 +379,24 @@
 .ws-pub-plat-head h3{font-size:15px;font-weight:800}
 .ws-pub-plat-acts{display:flex;gap:8px}
 .ws-pub-plat-acts button{font-size:12px;color:var(--ws-acc);background:none;border:none;font-weight:600}
-.ws-pub-plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+/* Platform groups */
+.ws-pub-group{margin-bottom:18px}
+.ws-pub-group-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ws-sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px}
+.ws-pub-gl-dot{width:7px;height:7px;border-radius:50%}
+.ws-pub-gl-dot.ws-green{background:var(--ws-mintink)}
+.ws-pub-gl-dot.ws-blue{background:var(--ws-acc)}
+.ws-pub-gl-dot.ws-gray{background:var(--ws-sub)}
+
+.ws-pub-plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:8px}
 .ws-pub-plat-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;border-radius:12px;background:var(--ws-bg2);border:1.5px solid var(--ws-line);text-align:left;transition:all .15s}
 .ws-pub-plat-card:hover{border-color:var(--ws-acc);box-shadow:var(--ws-shadow-sm)}
 .ws-pub-plat-card.ws-on{border-color:var(--ws-acc);background:var(--ws-lav)}
+.ws-pub-plat-top{display:flex;align-items:center;justify-content:space-between;width:100%}
 .ws-pub-plat-check{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--ws-line);display:flex;align-items:center;justify-content:center;color:var(--ws-acc);transition:all .15s}
 .ws-pub-plat-card.ws-on .ws-pub-plat-check{background:var(--ws-acc);border-color:var(--ws-acc);color:#fff}
+.ws-pub-plat-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px}
+.ws-pub-plat-badge.ws-own{background:var(--ws-mint);color:var(--ws-mintink)}
+.ws-pub-plat-badge.ws-rec{background:var(--ws-lav);color:var(--ws-acc)}
 .ws-pub-plat-name{font-size:13.5px;font-weight:700;color:var(--ws-ink)}
 .ws-pub-plat-tone{font-size:11px;color:var(--ws-sub);line-height:1.4}
 

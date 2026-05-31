@@ -31,6 +31,28 @@ export const INDUSTRIES = [
   "其他",
 ] as const;
 
+/**
+ * 内容发布平台 — 统一列表
+ * geo_tier: "core" = AI引用率高（知乎/百家号/头条/搜狐）
+ *           "recommended" = 品牌曝光好（小红书/公众号/B站）
+ *           "extra" = 补充覆盖
+ */
+export const CONTENT_PLATFORMS = [
+  { key: "zhihu",        label: "知乎",       geoTier: "core" },
+  { key: "baijiahao",    label: "百家号",     geoTier: "core" },
+  { key: "toutiao",      label: "头条号",     geoTier: "core" },
+  { key: "sohu",         label: "搜狐",       geoTier: "core" },
+  { key: "xiaohongshu",  label: "小红书",     geoTier: "recommended" },
+  { key: "gongzhonghao", label: "公众号",     geoTier: "recommended" },
+  { key: "bilibili",     label: "B站",        geoTier: "recommended" },
+  { key: "wangyi",       label: "网易",       geoTier: "extra" },
+  { key: "qiehao",       label: "企鹅号",     geoTier: "extra" },
+  { key: "douyin",       label: "抖音",       geoTier: "extra" },
+  { key: "csdn",         label: "CSDN",       geoTier: "extra" },
+  { key: "jianshu",      label: "简书",       geoTier: "extra" },
+] as const;
+
+/** 向后兼容：新建项目「现有留痕」仍然用这个（只保留常见的） */
 export const SOCIAL_PLATFORMS = [
   { key: "douyin", label: "抖音" },
   { key: "xiaohongshu", label: "小红书" },

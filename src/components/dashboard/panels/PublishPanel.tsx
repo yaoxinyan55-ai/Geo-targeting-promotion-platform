@@ -2,17 +2,23 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { CONTENT_PLATFORMS } from "@/constants";
 import {
   PUBLISH_PLATFORM_LABELS,
   PUBLISH_PLATFORM_URLS,
   PLATFORM_TONE_DESC,
 } from "@/types/database";
-import type { Article, PublishPlatform } from "@/types/database";
+import type { Article, PublishPlatform, PlatformPresence } from "@/types/database";
 
-const ALL_PLATFORMS: PublishPlatform[] = [
-  "wangyi", "sohu", "baijiahao", "toutiao", "qiehao", "zhihu",
-  "gongzhonghao", "xiaohongshu", "douyin", "bilibili", "csdn", "jianshu",
-];
+/** Map legacy project platform keys to PublishPlatform keys */
+const LEGACY_KEY_MAP: Record<string, PublishPlatform> = {
+  douyin: "douyin",
+  xiaohongshu: "xiaohongshu",
+  zhihu: "zhihu",
+  toutiao: "toutiao",
+  wechat: "gongzhonghao",
+  weibo: "douyin", // 微博 doesn't have a direct match; skip
+};
 
 interface PlatformArticle {
   platform: PublishPlatform;
@@ -34,7 +40,9 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
   const [generating, setGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [step, setStep] = useState<"select-article" | "select-platforms" | "results">("select-article");
+  const [userPlatformKeys, setUserPlatformKeys] = useState<Set<string>>(new Set());
 
+  // Load articles + user's existing platform accounts
   useEffect(() => {
     const supabase = createClient();
     const saved = localStorage.getItem("geo_selected_project");
@@ -43,15 +51,44 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
       return;
     }
     const { id: projectId } = JSON.parse(saved) as { id: string };
-    supabase
-      .from("articles")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setArticles((data ?? []) as unknown as Article[]);
-        setLoading(false);
-      });
+
+    // Load articles and project in parallel
+    Promise.all([
+      supabase
+        .from("articles")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("projects")
+        .select("existing_platforms")
+        .eq("id", projectId)
+        .single(),
+    ]).then(([articlesRes, projectRes]) => {
+      setArticles((articlesRes.data ?? []) as unknown as Article[]);
+
+      // Extract user's existing platform keys
+      if (projectRes.data) {
+        const platforms = projectRes.data.existing_platforms as PlatformPresence[];
+        const enabledKeys = new Set(
+          platforms.filter((p) => p.enabled).map((p) => p.platform)
+        );
+        setUserPlatformKeys(enabledKeys);
+
+        // Auto-select matching platforms
+        const autoSelected = new Set<PublishPlatform>();
+        enabledKeys.forEach((key) => {
+          const mapped = LEGACY_KEY_MAP[key];
+          if (mapped && mapped !== "douyin") autoSelected.add(mapped); // skip weibo→douyin mapping
+          // Direct match check
+          const directMatch = CONTENT_PLATFORMS.find((cp) => cp.key === key);
+          if (directMatch) autoSelected.add(directMatch.key as PublishPlatform);
+        });
+        setSelectedPlatforms(autoSelected);
+      }
+
+      setLoading(false);
+    });
   }, []);
 
   const togglePlatform = useCallback((platform: PublishPlatform) => {
@@ -67,7 +104,8 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelectedPlatforms(new Set(ALL_PLATFORMS));
+    const all = CONTENT_PLATFORMS.map((p) => p.key as PublishPlatform);
+    setSelectedPlatforms(new Set(all));
   }, []);
 
   const deselectAll = useCallback(() => {
@@ -88,7 +126,6 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
     }));
     setPlatformArticles(initial);
 
-    // Generate for each platform sequentially (to avoid overloading API)
     for (let i = 0; i < platforms.length; i++) {
       const platform = platforms[i];
       setPlatformArticles((prev) =>
@@ -138,6 +175,21 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   }, []);
+
+  // Split platforms into groups
+  const userOwnedPlatforms = CONTENT_PLATFORMS.filter((p) => {
+    const key = p.key;
+    // Check direct match or legacy key match
+    return userPlatformKeys.has(key) ||
+      Object.entries(LEGACY_KEY_MAP).some(([legacyKey, mapped]) => mapped === key && userPlatformKeys.has(legacyKey));
+  });
+
+  const corePlatforms = CONTENT_PLATFORMS.filter(
+    (p) => p.geoTier === "core" && !userOwnedPlatforms.includes(p)
+  );
+  const otherPlatforms = CONTENT_PLATFORMS.filter(
+    (p) => p.geoTier !== "core" && !userOwnedPlatforms.includes(p)
+  );
 
   if (loading) {
     return <div className="ws-view ws-show"><div style={{ textAlign: "center", padding: "48px 0", color: "var(--ws-sub)" }}>加载中...</div></div>;
@@ -209,28 +261,67 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
             </div>
           </div>
 
-          <div className="ws-pub-plat-grid">
-            {ALL_PLATFORMS.map((platform) => {
-              const isSelected = selectedPlatforms.has(platform);
-              return (
-                <button
-                  key={platform}
-                  className={`ws-pub-plat-card${isSelected ? " ws-on" : ""}`}
-                  onClick={() => togglePlatform(platform)}
-                >
-                  <span className="ws-pub-plat-check">
-                    {isSelected && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M5 12l5 5L20 6" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="ws-pub-plat-name">{PUBLISH_PLATFORM_LABELS[platform]}</span>
-                  <span className="ws-pub-plat-tone">{PLATFORM_TONE_DESC[platform].slice(0, 12)}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Group 1: User's existing platforms */}
+          {userOwnedPlatforms.length > 0 && (
+            <div className="ws-pub-group">
+              <div className="ws-pub-group-label">
+                <span className="ws-pub-gl-dot ws-green" />
+                你已有的平台 · 优先发布
+              </div>
+              <div className="ws-pub-plat-grid">
+                {userOwnedPlatforms.map((p) => (
+                  <PlatformCard
+                    key={p.key}
+                    platform={p.key as PublishPlatform}
+                    isSelected={selectedPlatforms.has(p.key as PublishPlatform)}
+                    onToggle={togglePlatform}
+                    badge="已有"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Group 2: Core GEO platforms */}
+          {corePlatforms.length > 0 && (
+            <div className="ws-pub-group">
+              <div className="ws-pub-group-label">
+                <span className="ws-pub-gl-dot ws-blue" />
+                GEO 推荐 · AI 引用率高
+              </div>
+              <div className="ws-pub-plat-grid">
+                {corePlatforms.map((p) => (
+                  <PlatformCard
+                    key={p.key}
+                    platform={p.key as PublishPlatform}
+                    isSelected={selectedPlatforms.has(p.key as PublishPlatform)}
+                    onToggle={togglePlatform}
+                    badge="推荐"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Group 3: Other platforms */}
+          {otherPlatforms.length > 0 && (
+            <div className="ws-pub-group">
+              <div className="ws-pub-group-label">
+                <span className="ws-pub-gl-dot ws-gray" />
+                更多平台
+              </div>
+              <div className="ws-pub-plat-grid">
+                {otherPlatforms.map((p) => (
+                  <PlatformCard
+                    key={p.key}
+                    platform={p.key as PublishPlatform}
+                    isSelected={selectedPlatforms.has(p.key as PublishPlatform)}
+                    onToggle={togglePlatform}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="ws-pub-gen-bar">
             <span className="ws-pub-gen-info">
@@ -274,6 +365,8 @@ export function PublishPanel({ onNavigate }: PublishPanelProps) {
   );
 }
 
+/* ── Sub-components ── */
+
 function StepPill({ label, active, done, onClick }: { label: string; active: boolean; done: boolean; onClick: () => void }) {
   return (
     <button
@@ -286,6 +379,42 @@ function StepPill({ label, active, done, onClick }: { label: string; active: boo
         </svg>
       )}
       {label}
+    </button>
+  );
+}
+
+function PlatformCard({
+  platform,
+  isSelected,
+  onToggle,
+  badge,
+}: {
+  platform: PublishPlatform;
+  isSelected: boolean;
+  onToggle: (p: PublishPlatform) => void;
+  badge?: string;
+}) {
+  return (
+    <button
+      className={`ws-pub-plat-card${isSelected ? " ws-on" : ""}`}
+      onClick={() => onToggle(platform)}
+    >
+      <div className="ws-pub-plat-top">
+        <span className="ws-pub-plat-check">
+          {isSelected && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M5 12l5 5L20 6" />
+            </svg>
+          )}
+        </span>
+        {badge && (
+          <span className={`ws-pub-plat-badge${badge === "推荐" ? " ws-rec" : " ws-own"}`}>
+            {badge}
+          </span>
+        )}
+      </div>
+      <span className="ws-pub-plat-name">{PUBLISH_PLATFORM_LABELS[platform]}</span>
+      <span className="ws-pub-plat-tone">{PLATFORM_TONE_DESC[platform].slice(0, 12)}</span>
     </button>
   );
 }
