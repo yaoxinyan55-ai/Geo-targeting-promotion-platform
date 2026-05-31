@@ -1,23 +1,23 @@
-import { SITE_NAME } from "@/constants";
-
 export function Footer() {
   return (
-    <footer className="bg-foreground text-white/60 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">AI</span>
-            <span className="text-lg font-bold text-white">提名官</span>
-          </div>
-
-          <p className="text-sm">
-            {SITE_NAME} - 让AI搜索主动推荐你的品牌
-          </p>
-
-          <p className="text-xs">
-            &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
-          </p>
+    <footer className="mk-footer">
+      <div className="mk-wrap">
+        <a className="mk-logo mk-lg" href="#top" style={{ justifyContent: "center" }}>
+          <span className="mk-logo-mark">@</span>
+          <span className="mk-logo-word">
+            <span className="mk-ai">AI</span>提名官
+          </span>
+        </a>
+        <p className="mk-fnote">
+          让 AI 搜索主动推荐你的品牌 · 港澳商家 &amp; 个人 IP 的 GEO 自动化平台
+        </p>
+        <div className="mk-flink">
+          <a href="#how">怎么用</a>
+          <a href="#power">核心能力</a>
+          <a href="#case">示例项目</a>
+          <a href="#">联系我们</a>
         </div>
+        <p className="mk-fnote">&copy; 2026 AI提名官 · 上线测试期</p>
       </div>
     </footer>
   );
